@@ -7,7 +7,6 @@ public final class Data {
 
     public static final class Commands {
         public static final String START = "/start";
-        public static final String STOP = "/stop";
     }
 
     public static final class Database {

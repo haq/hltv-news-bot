@@ -51,17 +51,12 @@ public class Bot extends TelegramLongPollingBot {
             if (text.equals(Data.Commands.START)) {
                 try {
                     database.connect().prepareStatement(
-                            String.format("INSERT INTO users (chat_id, first_name, last_name) VALUES (%d, '%s', '%s')", chatId, message.getFrom().getFirstName(), message.getFrom().getLastName())
-                    ).execute();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                } finally {
-                    database.disconnect();
-                }
-            } else if (text.equals(Data.Commands.STOP)) {
-                try {
-                    database.connect().prepareStatement(
-                            String.format("DELETE FROM users WHERE chat_id=%d", chatId)
+                            String.format(
+                                    "INSERT INTO users (chat_id, first_name, last_name) VALUES (%d, '%s', '%s')",
+                                    chatId,
+                                    message.getFrom().getFirstName(),
+                                    message.getFrom().getLastName()
+                            )
                     ).execute();
                 } catch (SQLException e) {
                     e.printStackTrace();
