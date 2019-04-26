@@ -1,5 +1,7 @@
 package me.ihaq.hltv;
 
+import java.util.concurrent.TimeUnit;
+
 public final class Data {
     public static final String NAME = "HLTV News Bot";
     public static String TOKEN = "";
@@ -15,5 +17,11 @@ public final class Data {
         public static final String USERNAME = "root";
         public static final String PASSWORD = "";
         public static final String MAX_POOL = "250";
+    }
+
+    public static final class Schedule {
+        public static final int INITIAL_DELAY = 0;
+        public static final int PERIOD = 10;
+        public static final TimeUnit TIME_UNIT = TimeUnit.MINUTES;
     }
 }
