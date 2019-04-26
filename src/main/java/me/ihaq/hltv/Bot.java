@@ -14,32 +14,31 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.io.IOException;
 import java.net.URL;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class Bot extends TelegramLongPollingBot {
 
-    private List<Integer> users = new ArrayList<Integer>();
-
-    public static final class Data {
-        public static final String NAME = "HLTV News Bot";
-        public static final String TOKEN = "";
-        public static final String RSS_LINK = "https://www.hltv.org/rss/news";
-
-        public static final class Commands {
-            public static final String START = "/start";
-            public static final String STOP = "/stop";
-        }
-    }
+    private Database database;
 
     public static void main(String[] args) {
+        Data.TOKEN = args[0];
         ApiContextInitializer.init();
         TelegramBotsApi telegramBotsApi = new TelegramBotsApi();
         try {
-            telegramBotsApi.registerBot(new Bot());
+            telegramBotsApi.registerBot(
+                    new Bot(new Database())
+            );
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
+    }
+
+    private Bot(Database database) {
+        this.database = database;
     }
 
     public void onUpdateReceived(Update update) {
@@ -50,9 +49,25 @@ public class Bot extends TelegramLongPollingBot {
             long chatId = message.getChatId();
 
             if (text.equals(Data.Commands.START)) {
-                // add user to list
+                try {
+                    database.connect().prepareStatement(
+                            String.format("INSERT INTO users (chat_id, first_name, last_name) VALUES (%d, '%s', '%s')", chatId, message.getFrom().getFirstName(), message.getFrom().getLastName())
+                    ).execute();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                } finally {
+                    database.disconnect();
+                }
             } else if (text.equals(Data.Commands.STOP)) {
-                // remover user from the list
+                try {
+                    database.connect().prepareStatement(
+                            String.format("DELETE FROM users WHERE chat_id=%d", chatId)
+                    ).execute();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                } finally {
+                    database.disconnect();
+                }
             }
         }
     }
@@ -70,9 +85,7 @@ public class Bot extends TelegramLongPollingBot {
                 System.out.println(entry.getPublishedDate());
                 System.out.println();
             }
-        } catch (FeedException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
+        } catch (FeedException | IOException e) {
             e.printStackTrace();
         }
     }
