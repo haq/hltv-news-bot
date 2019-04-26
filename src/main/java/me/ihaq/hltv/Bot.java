@@ -32,6 +32,8 @@ public class Bot extends TelegramLongPollingBot {
     private HikariDataSource dataSource;
 
     public static void main(String[] args) {
+
+        // TODO: remove before building
         Data.TOKEN = args[0];
 
         ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
@@ -40,6 +42,7 @@ public class Bot extends TelegramLongPollingBot {
         dataSource.setJdbcUrl(Data.Database.URL);
         dataSource.setUsername(Data.Database.USERNAME);
         dataSource.setPassword(Data.Database.PASSWORD);
+        dataSource.addDataSourceProperty("serverTimezone", "UTC");
         dataSource.addDataSourceProperty("cachePrepStmts", "true");
         dataSource.addDataSourceProperty("prepStmtCacheSize", "250");
         dataSource.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
