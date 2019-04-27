@@ -76,7 +76,6 @@ class Bot(private val dataSource: HikariDataSource, scheduler: ScheduledExecutor
                                     modifyChatTable(chatId, true)
                                 }
                             }
-
                             Thread.sleep(250)
                         }
                         result.beforeFirst()
@@ -95,7 +94,7 @@ class Bot(private val dataSource: HikariDataSource, scheduler: ScheduledExecutor
         val message = update.message
         val chatId = message.chatId.toString()
 
-        if (!message.newChatMembers.isEmpty()) { // bot joined group chat
+        if (message.newChatMembers.isNotEmpty()) { // bot joined group chat
             val validBots = message.newChatMembers
                 .filter { it.bot }
                 .filter { it.firstName.equals(Data.NAME, ignoreCase = true) }
