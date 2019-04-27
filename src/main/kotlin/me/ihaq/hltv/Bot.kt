@@ -16,37 +16,34 @@ import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 
-class Bot(private val dataSource: HikariDataSource, scheduler: ScheduledExecutorService) : TelegramLongPollingBot() {
+fun main(args: Array<String>) {
+    Data.TOKEN = args[0]
 
-    companion object {
-        @JvmStatic
-        fun main(args: Array<String>) {
-            Data.TOKEN = args[0]
-
-            val scheduler = Executors.newSingleThreadScheduledExecutor()
-            val dataSource = HikariDataSource().apply {
-                this.jdbcUrl = Data.Database.URL
-                this.username = Data.Database.USERNAME
-                this.password = Data.Database.PASSWORD
-                this.addDataSourceProperty("serverTimezone", "UTC")
-            }
-
-            ApiContextInitializer.init()
-            val telegramBotsApi = TelegramBotsApi()
-            try {
-                telegramBotsApi.registerBot(
-                    Bot(dataSource, scheduler)
-                )
-            } catch (e: TelegramApiException) {
-                e.printStackTrace()
-            }
-
-            Runtime.getRuntime().addShutdownHook(Thread {
-                dataSource.close()
-                scheduler.shutdown()
-            })
-        }
+    val scheduler = Executors.newSingleThreadScheduledExecutor()
+    val dataSource = HikariDataSource().apply {
+        this.jdbcUrl = Data.Database.URL
+        this.username = Data.Database.USERNAME
+        this.password = Data.Database.PASSWORD
+        this.addDataSourceProperty("serverTimezone", "UTC")
     }
+
+    ApiContextInitializer.init()
+    val telegramBotsApi = TelegramBotsApi()
+    try {
+        telegramBotsApi.registerBot(
+            Bot(dataSource, scheduler)
+        )
+    } catch (e: TelegramApiException) {
+        e.printStackTrace()
+    }
+
+    Runtime.getRuntime().addShutdownHook(Thread {
+        dataSource.close()
+        scheduler.shutdown()
+    })
+}
+
+class Bot(private val dataSource: HikariDataSource, scheduler: ScheduledExecutorService) : TelegramLongPollingBot() {
 
     init {
         scheduler.scheduleAtFixedRate({
