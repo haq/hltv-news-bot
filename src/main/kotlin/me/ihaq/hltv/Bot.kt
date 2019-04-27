@@ -9,15 +9,12 @@ import org.telegram.telegrambots.meta.TelegramBotsApi
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage
 import org.telegram.telegrambots.meta.api.objects.Message
 import org.telegram.telegrambots.meta.api.objects.Update
-import org.telegram.telegrambots.meta.api.objects.User
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException
 import java.net.URL
-import java.sql.SQLException
 import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
-import java.util.function.Predicate
 
 class Bot(private val dataSource: HikariDataSource, scheduler: ScheduledExecutorService) : TelegramLongPollingBot() {
 
@@ -61,7 +58,7 @@ class Bot(private val dataSource: HikariDataSource, scheduler: ScheduledExecutor
                 val now = Date().time
                 val result = connection.createStatement().executeQuery("SELECT * FROM chats")
 
-                for (entry in feed.entries) {
+                feed.entries.forEach { entry ->
                     val previous = entry.publishedDate.time
                     val max = TimeUnit.MILLISECONDS.convert(
                         Data.Schedule.PERIOD.toLong(), Data.Schedule.TIME_UNIT
@@ -102,11 +99,10 @@ class Bot(private val dataSource: HikariDataSource, scheduler: ScheduledExecutor
         val chatId = message.chatId.toString()
 
         if (!message.newChatMembers.isEmpty()) { // bot joined group chat
-            message.newChatMembers
-                .stream()
+            val validBots = message.newChatMembers
                 .filter { it.bot }
                 .filter { it.firstName.equals(Data.NAME, ignoreCase = true) }
-                .forEach { modifyChatTable(chatId) }
+            repeat(validBots.size) { modifyChatTable(chatId) }
         } else if (message.leftChatMember != null) { // bot left group chat
             val leftUser = message.leftChatMember
             if (leftUser.bot && leftUser.firstName.equals(Data.NAME, ignoreCase = true)) {
@@ -117,21 +113,18 @@ class Bot(private val dataSource: HikariDataSource, scheduler: ScheduledExecutor
         }
     }
 
-    override fun getBotUsername(): String = Data.NAME
+    override fun getBotUsername() = Data.NAME
 
-    override fun getBotToken(): String = Data.TOKEN
+    override fun getBotToken() = Data.TOKEN
 
     private fun execute(sql: String) =
         dataSource.connection.use { connection -> connection.prepareStatement(sql).execute() }
 
     private fun modifyChatTable(chatId: String, remove: Boolean = false) {
-        var sql = String.format(
-            "INSERT INTO chats (chat_id) VALUES ('%s')", chatId
-        )
-        if (remove) {
-            sql = String.format(
-                "DELETE FROM chats WHERE chat_id='%s'", chatId
-            )
+        val sql = if (!remove) {
+            "INSERT INTO chats (chat_id) VALUES ('$chatId')"
+        } else {
+            "DELETE FROM chats WHERE chat_id='$chatId'"
         }
         execute(sql)
     }
