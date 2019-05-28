@@ -79,6 +79,8 @@ class Bot(private val dataSource: HikariDataSource, scheduler: ScheduledExecutor
                             Thread.sleep(250)
                         }
                         result.beforeFirst()
+                    } else {
+                        return@forEach
                     }
                 }
             }
